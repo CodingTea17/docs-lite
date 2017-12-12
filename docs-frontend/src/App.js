@@ -1,4 +1,5 @@
 import React, { Component } from 'react'
+import ActionCable from 'actioncable'
 import './App.css'
 
 class App extends Component {
@@ -10,10 +11,22 @@ class App extends Component {
         this.setState({ text: res.text })
       })
     })
+
+    const cable = ActionCable.createConsumer('ws://localhost:3001/cable')
+    this.sub = cable.subscriptions.create('NotesChannel', {
+      received: this.handleReceiveNewText
+    })
+  }
+
+  handleReceiveNewText = ({ text }) => {
+    if (text !== this.state.text) {
+      this.setState({ text })
+    }
   }
 
   handleChange = e => {
     this.setState({ text: e.target.value })
+    this.sub.send({ text: e.target.value, id: 1 })
   }
 
   render() {
